@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Sensor {
+  id            String    @id @default(uuid())
+  name          String    @unique @db.VarChar(20)
+  description   String?   @db.VarChar(500)
+  latitude      Float     @db.DoublePrecision
+  longitude     Float     @db.DoublePrecision
+  createdAt     DateTime  @db.Timestamptz @default(now())
+  measurements  Measurement[]
+}
+
+model Measurement {
+  id            String    @id @default(uuid())
+  sensor        Sensor    @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  sensorId      String
+  valueType     ValueType
+  value         Float     @db.DoublePrecision
+  measuredAt    DateTime  @db.Timestamptz @default(now())
+}
+
+model Threshold {
+  valueType     ValueType @id
+  lowAlarm      Float?    @db.DoublePrecision
+  highAlarm     Float?    @db.DoublePrecision
+}
+
+enum ValueType {
+  Temperature
+  Humidity
+  AirQuality
+  Oxygen
+}
