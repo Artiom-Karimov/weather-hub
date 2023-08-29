@@ -18,6 +18,7 @@ model Sensor {
   longitude     Float     @db.DoublePrecision
   createdAt     DateTime  @db.Timestamptz @default(now())
   measurements  Measurement[]
+  alarms        Alarm[]
 }
 
 model Measurement {
@@ -27,12 +28,27 @@ model Measurement {
   valueType     ValueType
   value         Float     @db.DoublePrecision
   measuredAt    DateTime  @db.Timestamptz @default(now())
+  alarm         Alarm?
 }
 
 model Threshold {
-  valueType     ValueType @id
-  lowAlarm      Float?    @db.DoublePrecision
-  highAlarm     Float?    @db.DoublePrecision
+  id            String    @id @default(uuid())
+  valueType     ValueType 
+  alarmType     AlarmType 
+  value         Float?    @db.DoublePrecision
+  alarms        Alarm[]
+  @@unique([valueType, alarmType])
+}
+
+model Alarm {
+  id            String      @id @default(uuid())
+  sensor        Sensor      @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  sensorId      String
+  measurement   Measurement @relation(fields: [measurementId], references: [id], onDelete: Restrict)
+  measurementId String      @unique
+  threshold     Threshold   @relation(fields: [thresholdId], references: [id], onDelete: Cascade)
+  thresholdId   String
+  createdAt     DateTime    @db.Timestamptz @default(now())
 }
 
 enum ValueType {
@@ -40,4 +56,9 @@ enum ValueType {
   Humidity
   AirQuality
   Oxygen
+}
+
+enum AlarmType {
+  HighAlarm
+  LowAlarm
 }
